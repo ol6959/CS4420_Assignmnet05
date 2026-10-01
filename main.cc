@@ -4,10 +4,6 @@
 
 using namespace std;
 
-void simulateFCFS(vector<Process>& processes);
-void simulateRR(vector<Process>& processes, int quantum);
-void simulateSJF(vector<Process>& processes);
-
 struct Process {
     int pid;
     int arrivalTime;
@@ -20,6 +16,12 @@ struct Process {
 
     bool completed;
 };
+
+void simulateFCFS(vector<Process>& processes);
+void simulateRR(vector<Process>& processes, int quantum);
+void simulateSJF(vector<Process>& processes);
+
+
 
 
 int main(int argc, char* argv[]){
@@ -71,7 +73,7 @@ int main(int argc, char* argv[]){
         simulateSJF(processes);
     }
     else if (algorithm == "RR") {
-        int quantum = 0;//////////tmp remove when def completed
+        int quantum = stoi(argv[3]);
         simulateRR(processes, quantum);
     }
     else {
@@ -86,4 +88,95 @@ int main(int argc, char* argv[]){
     return 0;
 }
 
+void simulateFCFS(vector<Process>& processes){
 
+    int currentTime = 0;
+    int completedProcesses = 0;
+
+    while (completedProcesses < processes.size()) {
+
+        int selected = -1;
+
+        // Find the first process that has arrived
+        // and has not completed yet.
+        for (int i = 0; i < processes.size(); i++) {
+
+            if (!processes[i].completed &&
+                processes[i].arrivalTime <= currentTime) {
+
+                if (selected == -1 ||
+                    processes[i].arrivalTime < processes[selected].arrivalTime) {
+
+                    selected = i;
+                }
+            }
+        }
+
+        // No process is ready
+        if (selected == -1) {
+            cout << "Time " << currentTime << ": CPU idle" << endl;
+            currentTime++;
+            continue;
+        }
+
+        // Record when this process starts
+        processes[selected].startTime = currentTime;
+
+        cout << "Time " << currentTime
+             << ": PID " << processes[selected].pid
+             << " starts" << endl;
+
+        // Run the process until it finishes
+        currentTime += processes[selected].burstTime;
+
+        // Record when it finishes
+        processes[selected].endTime = currentTime;
+
+        processes[selected].remainingTime = 0;
+        processes[selected].completed = true;
+
+        // Waiting time
+        processes[selected].waitingTime =
+            processes[selected].startTime -
+            processes[selected].arrivalTime;
+
+        cout << "Time " << currentTime
+             << ": PID " << processes[selected].pid
+             << " finishes" << endl;
+
+        completedProcesses++;
+    }
+
+    // Print results
+    cout << endl;
+    cout << "PID\tArrival\tStart\tEnd\tRunning\tWaiting" << endl;
+
+    int totalWaitingTime = 0;
+
+    for (const Process& p : processes) {
+
+        cout << p.pid << "\t"
+             << p.arrivalTime << "\t"
+             << p.startTime << "\t"
+             << p.endTime << "\t"
+             << p.burstTime << "\t"
+             << p.waitingTime << endl;
+
+        totalWaitingTime += p.waitingTime;
+    }
+
+    double averageWaitingTime =
+        static_cast<double>(totalWaitingTime) / processes.size();
+
+    cout << endl;
+    cout << "Average Waiting Time: "
+         << averageWaitingTime << endl;
+}
+
+void simulateRR(vector<Process>& processes, int quantum) {
+
+}
+
+void simulateSJF(vector<Process>& processes) {
+
+}
