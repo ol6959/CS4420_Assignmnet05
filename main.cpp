@@ -197,7 +197,68 @@ void simulateRR(vector<Process>& processes, int quantum) {
             currentTime++;
             continue;
         }
+        int selected = readyQueue.front();
+        readyQueue.pop();
+
+        // Record start time if this is the first time this process has run.
+        if (processes[selected].startTime == -1) {
+            processes[selected].startTime = currentTime;
+        }
+
+        int runTime =min(quantum, processes[selected].remainingTime);
+
+        cout << "Time " << currentTime << ": PID " << processes[selected].pid << " run for " << runTime << " ms" << endl;
+
+        currentTime += runTime;
+
+        processes[selected].remainingTime -= runTime;
+
+        for (int i = 0; i < processes.size(); i++){
+            if(!added[i] && processes[i].arrivalTime <= currentTime){
+                readyQueue.push(i);
+                added[i] = true;
+            }
+        }
+        if(processes[selected].remainingTime == 0){
+            processes[selected].completed = true;
+            processes[selected].endTime = currentTime;
+
+            processes[selected].waitingTime = processes[selected].endTime - processes[selected].arrivalTime - processes[selected].burstTime;
+
+            cout << "Time " << currentTime << ": PID " << processes[selected].pid << " finishes" << endl;
+
+            completedProcesses++;
+
+        }
+        else {
+
+            // Process did not finish, so put it
+            // at the back of the ready queue.
+            readyQueue.push(selected);
+        }
     }
+    // Print statistics
+    cout << endl;
+    cout << "PID\tArrival\tStart\tEnd\tRunning\tWaiting" << endl;
+
+    int totalWaitingTime = 0;
+
+    for (const Process& p : processes) {
+
+        cout << p.pid << "\t"
+             << p.arrivalTime << "\t"
+             << p.startTime << "\t"
+             << p.endTime << "\t"
+             << p.burstTime << "\t"
+             << p.waitingTime << endl;
+
+        totalWaitingTime += p.waitingTime;
+    }
+
+    double averageWaitingTime = static_cast<double>(totalWaitingTime) / processes.size();
+
+    cout << endl; cout << "Average Waiting Time: " << averageWaitingTime << endl;
+
 }
 
 void simulateSJF(vector<Process>& processes) {

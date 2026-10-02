@@ -1,0 +1,8 @@
+# CMake build directory
+build/
+
+# macOS files
+.DS_Store
+
+# Compiled executable
+proj2
